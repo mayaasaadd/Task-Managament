@@ -15,7 +15,7 @@ st.set_page_config(page_title="Task Manager", layout="centered", page_icon="✅"
 MONGO_URI = st.secrets["MONGO_URI"] 
 
 try:
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tls=True)
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=10000, tls=True)
     client.admin.command("ping")
 except Exception as e:
     st.error("❌ Cannot connect to MongoDB Atlas")
