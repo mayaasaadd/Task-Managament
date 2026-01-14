@@ -138,7 +138,7 @@ def public_login():
     </div>
     """, unsafe_allow_html=True)
 
-     st.markdown("<div style='height:35px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:35px'></div>", unsafe_allow_html=True)
 
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
