@@ -9,72 +9,6 @@ import shutil
 import time
 import threading
 
-# -----------------------------
-# GOOGLE DRIVE BACKUP SETUP
-# -----------------------------
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
-from google.oauth2.service_account import Credentials
-import io
-
-# Path to your service account JSON downloaded from Google Cloud
-SERVICE_ACCOUNT_INFO = json.loads(st.secrets["google_service_account"]["json"])
-SCOPES = ["https://www.googleapis.com/auth/drive.file"]
-
-creds = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
-
-drive_service = build('drive', 'v3', credentials=creds)
-
-# Your backup file name on Drive
-DRIVE_FILE_NAME = "taskmanager_data.json"
-
-# -----------------------------
-# Upload data.json to Drive
-# -----------------------------
-def upload_to_drive():
-    try:
-        # Check if file already exists on Drive
-        response = drive_service.files().list(q=f"name='{DRIVE_FILE_NAME}'", spaces='drive').execute()
-        files = response.get("files", [])
-
-        media = MediaFileUpload(DATA_FILE, resumable=True)
-
-        if files:
-            # Update existing file
-            file_id = files[0]["id"]
-            drive_service.files().update(fileId=file_id, media_body=media).execute()
-            print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Uploaded updated data.json to Google Drive.")
-        else:
-            # Create new file
-            file_metadata = {"name": DRIVE_FILE_NAME}
-            drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-            print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Uploaded new data.json to Google Drive.")
-    except Exception as e:
-        print(f"Drive upload failed: {e}")
-
-# -----------------------------
-# Download data.json from Drive on startup
-# -----------------------------
-def download_from_drive():
-    try:
-        response = drive_service.files().list(q=f"name='{DRIVE_FILE_NAME}'", spaces='drive').execute()
-        files = response.get("files", [])
-
-        if not files:
-            print("No backup found on Drive. Using local/default data.")
-            return
-
-        file_id = files[0]["id"]
-        request = drive_service.files().get_media(fileId=file_id)
-        fh = io.FileIO(DATA_FILE, 'wb')
-        downloader = MediaIoBaseDownload(fh, request)
-
-        done = False
-        while not done:
-            status, done = downloader.next_chunk()
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Downloaded latest data.json from Google Drive.")
-    except Exception as e:
-        print(f"Drive download failed: {e}")
 
 
 
@@ -87,7 +21,7 @@ def hash_password(password: str) -> str:
 # DATA FILE
 # -----------------------------
 DATA_FILE = "data.json"
-#BACKUP_FILE = "data_backup.json"
+BACKUP_FILE = "data_backup.json"
 
 
 PUBLIC_USERNAME = st.secrets["passwords"]["public_username"]
@@ -160,19 +94,7 @@ periodic_backup(interval=300)
 def save_data():
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=2)
-    upload_to_drive()  # upload immediately after saving
-
-def periodic_backup(interval=300):
-    def run():
-        while True:
-            time.sleep(interval)
-            upload_to_drive()  # automatic upload every interval
-    threading.Thread(target=run, daemon=True).start()
-
-# Download latest backup on startup
-download_from_drive()
-periodic_backup(interval=300)
-
+    backup_data()
 
 
 
