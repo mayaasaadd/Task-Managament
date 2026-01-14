@@ -25,7 +25,6 @@ BACKUP_FILE = "data_backup.json"
 
 
 PUBLIC_USERNAME = "strategy.team2025"
-PUBLIC_PASSWORD_HASH = "3137e6853c24fffa678e5ed165b10834dbfb3e8c97b79ad43d16d6cd9e9273ea"
 
 
 # -----------------------------
