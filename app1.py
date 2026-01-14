@@ -12,7 +12,7 @@ st.set_page_config(page_title="Task Manager", layout="centered", page_icon="✅"
 # -------------------------------------------------
 # MONGODB CONNECTION
 # -------------------------------------------------
-MONGO_URI = st.secrets["mongo_uri"] 
+MONGO_URI = st.secrets["mongo_uri"]
 
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=10000, tls=True)
@@ -27,10 +27,10 @@ members_col = db["members"]
 tasks_col = db["tasks"]
 
 # -------------------------------------------------
-# SECURITY
+# SECURITY (PUBLIC LOGIN)
 # -------------------------------------------------
-PUBLIC_USERNAME = st.secrets["PUBLIC_USERNAME"]
-PUBLIC_PASSWORD_HASH = st.secrets["PUBLIC_PASSWORD_HASH"]
+PUBLIC_USERNAME = st.secrets["public_username"]
+PUBLIC_PASSWORD_HASH = st.secrets["public_password_hash"]
 
 def hash_password(p):
     return hashlib.sha256(p.encode()).hexdigest()
@@ -61,7 +61,7 @@ for key in ["authenticated", "role", "member_name"]:
 def logout():
     for k in list(st.session_state.keys()):
         del st.session_state[k]
-    st.rerun()
+    st.experimental_rerun()
 
 def add_logout():
     _, col = st.columns([10, 1.8])
@@ -93,7 +93,7 @@ def public_login():
                 st.error("Both fields required")
             elif user == PUBLIC_USERNAME and hash_password(pwd) == PUBLIC_PASSWORD_HASH:
                 st.session_state.authenticated = True
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error("Invalid credentials")
 
@@ -106,7 +106,6 @@ def select_role():
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
         role = st.radio("Select role", ["Admin", "Member"], horizontal=True)
-
         member = None
         if role == "Member":
             names = [m["name"] for m in members_col.find({"role": "Member"})]
@@ -115,7 +114,7 @@ def select_role():
         if st.button("Continue"):
             st.session_state.role = role
             st.session_state.member_name = member
-            st.rerun()
+            st.experimental_rerun()
 
 # -------------------------------------------------
 # ADMIN DASHBOARD
