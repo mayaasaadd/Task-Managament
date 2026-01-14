@@ -102,6 +102,7 @@ def save_data():
 # LOGOUT FUNCTION
 # -----------------------------
 def logout():
+    st.session_state.authenticated = False  # go back to login
     st.session_state.role = None
     st.session_state.user_id = None
 
@@ -565,10 +566,10 @@ div.stButton>button:hover {
                 save_data()
                 st.success("Updated successfully!")
 
-if not st.session_state.authenticated:
-    public_login()
+f not st.session_state.authenticated:
+    public_login()  
 elif st.session_state.role is None:
-    select_role()
+    select_role()  
 else:
     if st.session_state.role == "Admin":
         admin_dashboard()
