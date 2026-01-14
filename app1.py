@@ -4,41 +4,87 @@ import plotly.express as px
 from datetime import datetime
 import json
 import os
+import hashlib
+import shutil
+import time
+import threading
+
+
+
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256((password).encode()).hexdigest()
+
+
 
 # -----------------------------
 # DATA FILE
 # -----------------------------
 DATA_FILE = "data.json"
+BACKUP_FILE = "data_backup.json"
+
+
+PUBLIC_USERNAME = "strategy.team2025"
+PUBLIC_PASSWORD_HASH = "3137e6853c24fffa678e5ed165b10834dbfb3e8c97b79ad43d16d6cd9e9273ea"
+
 
 # -----------------------------
 # INITIALIZE DATA
 # -----------------------------
 if not os.path.exists(DATA_FILE):
-    # Preloaded members and tasks
-    data = {
-        "members": [
-            {"id": 1, "username": "Maya Allam"},
-            {"id": 2, "username": "Ahmed Khodier"},
-            {"id": 3, "username": "Amr Gado"},
-            {"id": 4, "username": "Karim Anwar"},
-            
-        ],
-        "tasks": [],
-        "task_activity": []
-    }
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    # Try backup first
+    if os.path.exists(BACKUP_FILE):
+        shutil.copy2(BACKUP_FILE, DATA_FILE)
+        print("Restored data.json from backup.")
+    else:
+        # original initialization if no backup
+        data = {
+            "members": [
+                {"id": 1, "username": "Maya Allam"},
+                {"id": 2, "username": "Ahmed Khodier"},
+                {"id": 3, "username": "Amr Gado"},
+                {"id": 4, "username": "Karim Anwar"},
+            ],
+            "tasks": [],
+            "task_activity": []
+        }
+        with open(DATA_FILE, "w") as f:
+            json.dump(data, f, indent=2)
 else:
     with open(DATA_FILE, "r") as f:
         data = json.load(f)
 
+
 # -----------------------------
 # SESSION STATE INIT
 # -----------------------------
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
 if "role" not in st.session_state:
     st.session_state.role = None
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
+
+# -----------------------------
+# Backup DATA
+# -----------------------------
+
+def backup_data():
+    try:
+        # Copy the current data file to a backup
+        shutil.copy2(DATA_FILE, BACKUP_FILE)
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Backup created.")
+    except Exception as e:
+        print(f"Backup failed: {e}")
+
+def periodic_backup(interval=300):
+    def run():
+        while True:
+            time.sleep(interval)
+            backup_data()
+    threading.Thread(target=run, daemon=True).start()
+
+periodic_backup(interval=300)  
 
 # -----------------------------
 # SAVE DATA
@@ -46,6 +92,9 @@ if "user_id" not in st.session_state:
 def save_data():
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=2)
+    backup_data()
+
+
 
 # -----------------------------
 # LOGOUT FUNCTION
@@ -59,6 +108,50 @@ def add_logout_topright():
     with col2:
         if st.button("Logout 🔒"):
             logout()
+
+def public_login():
+    st.set_page_config(page_title="Task Manager", layout="centered")
+
+    # Logo
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image("Unknown.png", use_container_width=True)
+
+    st.markdown("<div style='height:30px'></div>", unsafe_allow_html=True)
+
+    # Container
+    st.markdown("""
+    <div style="
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 40px 35px;
+        border-radius: 20px;
+        box-shadow: 0 14px 35px rgba(11,61,145,0.15);
+        background: white;
+        text-align: center;
+    ">
+        <h1 style="color:#0b3d91;">Secure Access</h1>
+        <p style="color:#6b7fa6;">Enter credentials to continue</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+
+    if st.button("Login"):
+        if not username or not password:
+            st.error("Both fields are required")
+            return
+
+        if (
+            username == PUBLIC_USERNAME
+            and hash_password(password) == PUBLIC_PASSWORD_HASH
+        ):
+            st.session_state.authenticated = True
+        else:
+            st.error("Invalid credentials")
 
 # -----------------------------
 # ROLE SELECTION (REPLACES LOGIN)
@@ -239,7 +332,7 @@ def admin_dashboard():
     .stTabs [role="tablist"] button[aria-selected="true"] { background-color: #062a6c; }
     .dashboard-card { background-color: #0b3d91; padding: 25px 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); color: white; margin-bottom: 20px; }
     .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div { border-radius: 10px !important; border: 1px solid #0b3d91 !important; padding: 10px !important; font-size: 15px !important; background-color: white !important; color: black !important; }
-    div.stButton>button { background-color: #0b3d91; color: white; border-radius: 10px; padding: 12px 0px; width: 100%; font-size: 16px; transition: 0.3s; }
+    div.stButton>button { background-color: #0b3d91; color: white; border-radius: 10px; padding: 8px 15px; width: 100%; font-size: 16px; transition: 0.3s; }
     div.stButton>button:hover { background-color: #062a6c; }
     </style>
     """, unsafe_allow_html=True)
@@ -360,8 +453,80 @@ def admin_dashboard():
 # -----------------------------
 def member_dashboard():
     add_logout_topright()
-    st.image("Unknown.png", width=500)
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+    # -----------------------------
+    # Logo - centered like main page
+    # -----------------------------
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+     st.image("Unknown.png", use_container_width=True)
+    
+    st.markdown("<div style='height:35px'></div>", unsafe_allow_html=True)
+
+    # -----------------------------
+    # Dashboard Card
+    # -----------------------------
+    st.markdown("""
+    <div style="
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 25px;
+        background: #f8fbff;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(11,61,145,0.1);
+        text-align: center;
+    ">
+        <h1 style="color:#0b3d91; font-weight:800; margin-bottom:6px;">Member Dashboard</h1>
+        <p style="color:#6b7fa6; font-size:15px; margin-bottom:25px;">Check Your Tasks and Progress</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("<div style='height:35px'></div>", unsafe_allow_html=True)
+
+    st.markdown("""
+<style>
+.stTabs [role="tablist"] button { 
+    border-radius: 50px; 
+    background-color: #0b3d91; 
+    color: white; 
+    font-weight: 600; 
+    margin-right: 5px; 
+    padding: 10px 25px;  /* smaller padding */
+    font-size: 14px;     /* slightly smaller text */
+    transition: 0.3s; 
+}
+.stTabs [role="tablist"] button[aria-selected="true"] { 
+    background-color: #062a6c; 
+}
+.dashboard-card { 
+    background-color: #0b3d91; 
+    padding: 20px 15px; 
+    border-radius: 15px; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12); 
+    color: white; 
+    margin-bottom: 20px; 
+}
+.stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div { 
+    border-radius: 10px !important; 
+    border: 1px solid #0b3d91 !important; 
+    padding: 8px !important;  /* smaller padding */
+    font-size: 14px !important; /* slightly smaller text */
+    background-color: white !important; 
+    color: black !important; 
+}
+div.stButton>button { 
+    background-color: #0b3d91; 
+    color: white; 
+    border-radius: 10px; 
+    padding: 8px 15px;   /* smaller vertical padding */
+    width: 100%; 
+    font-size: 14px;    /* smaller font */
+    transition: 0.3s; 
+}
+div.stButton>button:hover { 
+    background-color: #062a6c; 
+}
+</style>
+""", unsafe_allow_html=True)
+
 
     member_id = st.session_state.user_id
     member_name = next((m["username"] for m in data["members"] if m["id"] == member_id),"Unknown Member")
@@ -399,10 +564,9 @@ def member_dashboard():
                 save_data()
                 st.success("Updated successfully!")
 
-# -----------------------------
-# ROUTING
-# -----------------------------
-if st.session_state.role is None:
+if not st.session_state.authenticated:
+    public_login()
+elif st.session_state.role is None:
     select_role()
 else:
     if st.session_state.role == "Admin":
