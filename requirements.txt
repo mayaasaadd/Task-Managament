@@ -1,3 +1,5 @@
 streamlit
 pandas
 plotly
+pymongo==4.4.1
+
