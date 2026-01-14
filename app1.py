@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 # -----------------------------
 # MONGODB CONNECTION
 # -----------------------------
-MONGO_URI = "mongodb+srv://AlahlyiaTaskManagment:<alahlyiastrategy@2025>@cluster0.oo0pkwy.mongodb.net/"
+MONGO_URI = "mongodb+srv://AlahlyiaTaskManagment:alahlyiastrategy%402025@cluster0.oo0pkwy.mongodb.net/"
 client = MongoClient(MONGO_URI)
 db = client["task_manager"]
 
