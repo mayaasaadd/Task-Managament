@@ -40,8 +40,8 @@ tasks_col = db["tasks"]
 # -------------------------------------------------
 # SECURITY (PUBLIC LOGIN)
 # -------------------------------------------------
-PUBLIC_USERNAME = "strategy.team2025"
-PUBLIC_PASSWORD_HASH = "3137e6853c24fffa678e5ed165b10834dbfb3e8c97b79ad43d16d6cd9e9273ea"
+PUBLIC_USERNAME = st.secrets["passwords"]["public_username"]
+PUBLIC_PASSWORD = st.secrets["passwords"]["public_password"]
 
 def hash_password(p):
     return hashlib.sha256(p.encode()).hexdigest()
@@ -107,11 +107,11 @@ def public_login():
     if st.button("Login"):
         if not user or not pwd:
             st.error("Both fields required")
-        elif user == PUBLIC_USERNAME and hash_password(pwd) == PUBLIC_PASSWORD_HASH:
+        elif username == PUBLIC_USERNAME and hash_password(password) == hash_password(PUBLIC_PASSWORD):
             st.session_state.authenticated = True
-            st.experimental_rerun()
         else:
-            st.error("Invalid credentials")
+             st.error("Invalid credentials")
+
 
 # -------------------------------------------------
 # ROLE SELECTION
