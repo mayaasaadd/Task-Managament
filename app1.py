@@ -12,7 +12,7 @@ st.set_page_config(page_title="Task Manager", layout="centered", page_icon="✅"
 # -------------------------------------------------
 # MONGODB CONNECTION
 # -------------------------------------------------
-MONGO_URI = st.secrets["MONGO_URI"] 
+MONGO_URI = st.secrets["mongo_uri"] 
 
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=10000, tls=True)
