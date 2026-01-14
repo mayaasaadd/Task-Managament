@@ -137,7 +137,6 @@ def public_login():
         <p style="color:#6b7fa6;">Enter credentials to continue</p>
     </div>
     """, unsafe_allow_html=True)
-        st.markdown("<div style='height:35px'></div>", unsafe_allow_html=True)
 
      st.markdown("<div style='height:35px'></div>", unsafe_allow_html=True)
 
