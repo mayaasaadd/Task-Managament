@@ -566,7 +566,7 @@ div.stButton>button:hover {
                 save_data()
                 st.success("Updated successfully!")
 
-f not st.session_state.authenticated:
+if not st.session_state.authenticated:
     public_login()  
 elif st.session_state.role is None:
     select_role()  
