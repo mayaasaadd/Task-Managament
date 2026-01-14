@@ -147,9 +147,9 @@ def public_login():
             st.error("Both fields are required")
             return
 
-           if username == PUBLIC_USERNAME and hash_password(password) == hash_password(PUBLIC_PASSWORD):
+        if username == PUBLIC_USERNAME and hash_password(password) == hash_password(PUBLIC_PASSWORD):
               st.session_state.authenticated = True
-          else:
+        else:
               st.error("Invalid credentials")
 
 
