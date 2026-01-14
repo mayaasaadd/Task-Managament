@@ -24,7 +24,6 @@ DATA_FILE = "data.json"
 BACKUP_FILE = "data_backup.json"
 
 
-PUBLIC_USERNAME = "strategy.team2025"
 
 
 # -----------------------------
