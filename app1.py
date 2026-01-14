@@ -17,12 +17,25 @@ st.set_page_config(page_title="Task Manager", layout="centered")
 # -------------------------------------------------
 MONGO_URI = st.secrets.get("MONGO_URI") or os.getenv("MONGO_URI")
 
-client = MongoClient(MONGO_URI)
-db = client["task_manager"]
+client = MongoClient(
+    MONGO_URI,
+    serverSelectionTimeoutMS=5000,
+    tls=True
+)
 
+# 🔒 HARD STOP if Mongo is unreachable
+try:
+    client.admin.command("ping")
+except Exception as e:
+    st.error("❌ Cannot connect to MongoDB Atlas")
+    st.error(str(e))
+    st.stop()
+    
+db = client["task_management"]
 members_col = db["members"]
+admins_col = db["admins"]
 tasks_col = db["tasks"]
-activity_col = db["task_activity"]
+
 
 # -------------------------------------------------
 # SECURITY (PUBLIC LOGIN)
