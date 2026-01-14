@@ -18,10 +18,11 @@ from google.oauth2.service_account import Credentials
 import io
 
 # Path to your service account JSON downloaded from Google Cloud
-SERVICE_ACCOUNT_FILE = "service_account.json"
+SERVICE_ACCOUNT_INFO = json.loads(st.secrets["google_service_account"]["json"])
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
-creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+creds = Credentials.from_service_account_info(SERVICE_ACCOUNT_INFO, scopes=SCOPES)
+
 drive_service = build('drive', 'v3', credentials=creds)
 
 # Your backup file name on Drive
